@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  db: 
+    image: postgres
+    restart: always
+    environment: 
+      DATABASE_HOST: localhost
+      POSTGRES_PASSWORD: 12345678
+      POSTGRES_USER: sa
+      POSTGRES_DB: StoreManagementDB
+    expose: 
+      - "5432"
+
+  api:
+    build:
+      context: .
+      dockerfile: StoreManagementAPI.dockerfile
+    depends_on:
+      - db
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/StoreManagementAPI/
+    command: python storemanagementapi/StoreManagement/manage.py runserver 0.0.0.0:8000
+
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - db
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: reduhq@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: reduhq
+    ports:
+      - "80:80"
