@@ -17,5 +17,3 @@ RUN bash -c "poetry install --no-root --no-dev"
 COPY . /StoreManagementAPI/
 
 ENV PYTHONUNBUFFERED=1
-
-ENV PYTHONPATH =/StoreManagementAPI/storemanagementapi/StoreManagement/

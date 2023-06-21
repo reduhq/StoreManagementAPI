@@ -23,7 +23,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/StoreManagementAPI/
-    command: python storemanagementapi/StoreManagement/manage.py runserver 0.0.0.0:8000
+    command: python /StoreManagementAPI/StoreManagementAPI/manage.py runserver 0.0.0.0:8000
 
   pgadmin:
     image: dpage/pgadmin4

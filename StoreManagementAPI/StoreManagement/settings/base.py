@@ -40,7 +40,8 @@ BASE_APPS = [
 ]
 
 LOCAL_APPS = [
-    
+    'apps.base',
+    'apps.product'
 ]
 
 THIRD_APPS = [
