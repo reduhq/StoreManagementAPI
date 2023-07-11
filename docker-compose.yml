@@ -6,7 +6,7 @@ services:
     restart: always
     environment: 
       DATABASE_HOST: localhost
-      POSTGRES_PASSWORD: 12345678
+      POSTGRES_PASSWORD: '12345678'
       POSTGRES_USER: sa
       POSTGRES_DB: StoreManagementDB
     expose: 
@@ -23,7 +23,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/StoreManagementAPI/
-    command: python /StoreManagementAPI/StoreManagementAPI/manage.py runserver 0.0.0.0:8000
+    command: ./wait-for-it.sh db:5432 -s -- python /StoreManagementAPI/StoreManagementAPI/manage.py runserver 0.0.0.0:8000
 
   pgadmin:
     image: dpage/pgadmin4
