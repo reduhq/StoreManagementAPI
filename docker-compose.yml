@@ -23,7 +23,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/StoreManagementAPI/
-    command: ./wait-for-it.sh db:5432 -s -- python /StoreManagementAPI/StoreManagementAPI/manage.py runserver 0.0.0.0:8000
+    command: ./start.sh
 
   pgadmin:
     image: dpage/pgadmin4
