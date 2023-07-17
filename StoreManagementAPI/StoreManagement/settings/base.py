@@ -41,7 +41,8 @@ BASE_APPS = [
 
 LOCAL_APPS = [
     'apps.base',
-    'apps.product'
+    'apps.product',
+    'apps.sales_order_header'
 ]
 
 THIRD_APPS = [
