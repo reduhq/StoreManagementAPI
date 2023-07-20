@@ -4,8 +4,8 @@ from rest_framework import routers
 from apps.product.api.views.product_view import ProductView
 
 router = routers.DefaultRouter()
-router.register(r"", ProductView, 'Product')
+router.register(r"product", ProductView, 'Product')
 
 urlpatterns = [
-    path('product/',include(router.urls))
+    path('',include(router.urls))
 ]

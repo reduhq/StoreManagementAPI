@@ -12,11 +12,23 @@ class SalesOrderHeader(BaseModel):
     paid_with = models.DecimalField("Paid with $", max_digits=10, decimal_places=4, null=False, blank=False)
     change = models.DecimalField("Change $", max_digits=10, decimal_places=4, null=False, blank=False)
     
-    # products = models.ManyToManyField(Product, through='SalesOrderDetail', verbose_name='Products', null=False, blank=False)
+    products = models.ManyToManyField(Product, through='SalesOrderDetail', verbose_name='Products', blank=False)
     
     class Meta:
         verbose_name = "Sales Order Header"
         verbose_name_plural = "Sales Order Headers"
 
     def __str__(self):
-        return self.name
+        return str(self.id)
+    
+
+class SalesOrderDetail(BaseModel):
+    sales_order_header = models.ForeignKey(SalesOrderHeader, on_delete=models.CASCADE, verbose_name="Sales Order Header", null=False, blank=False)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="Product", null=False, blank=False)
+    price = models.DecimalField("Price", max_digits=10, decimal_places=4, null=False, blank=False)
+    quantity = models.IntegerField("Quantity", null=False, blank=False)
+    discount = models.DecimalField("Discount", max_digits=10, decimal_places=4, null=False, blank=False)
+    
+    class Meta: 
+        verbose_name = "Sales Order Detail"
+        verbose_name_plural = "Sales Order Details"
