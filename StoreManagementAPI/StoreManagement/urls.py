@@ -17,8 +17,32 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Store Management API",
+        default_version='v1',
+        description="API documentation for this project",
+        # terms_of_service="https://www.example.com/terms/",
+        contact=openapi.Contact(
+            name='Rey Eduardo Halsall Quintero',
+            url='https://www.linkedin.com/in/rey-halsall/',
+            email='reyeduardohalsallquintero8@gmail.com'
+        )
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    
     path("api/v1/", include('apps.product.api.urls')),
     path("api/v1/", include('apps.invoice.api.urls'))
 ]
