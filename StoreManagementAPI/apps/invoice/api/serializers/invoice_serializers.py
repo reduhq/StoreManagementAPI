@@ -8,17 +8,19 @@ from apps.product.api.serializers.product_serializer import ProductSerializer
 #         model = SalesOrderHeader
 #         fields = '__all__'
 
-class SalesOrderSerializer(serializers.Serializer):
+class SalesSerializer(serializers.Serializer):
     id_product = serializers.IntegerField(required=True)
-    product_price = serializers.DecimalField(max_digits=10, decimal_places=4)
+    product_price = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
     quantity = serializers.IntegerField()
 
-class SalesOrderHeaderCreateSerializer(serializers.ModelSerializer):
+class SalesOrderSerializer(serializers.Serializer):
     sales_data = SalesSerializer(many=True)
-    class Meta:    
-        model = SalesOrderHeader
-        fields = ('sales_data', 'paid_with', )
+    paid_with = serializers.DecimalField(max_digits=10, decimal_places=4,coerce_to_string=False)
 
+class SalesOrderHeaderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SalesOrderHeader
+        fields = '__all__'
 
 class SalesOrderDetailSerializer(serializers.ModelSerializer):
     class Meta:
