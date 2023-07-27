@@ -8,23 +8,21 @@ from apps.invoice.api.serializers.invoice_serializers import (
     SalesOrderHeaderSerializer,
     SalesOrderDetailSerializer, 
 )
-from apps.invoice.models import SalesOrderHeader, SalesOrderDetail
+from drf_yasg.utils import swagger_auto_schema
+from apps.invoice.models import SalesOrderHeader, SalesOrderDetail    
 
-# class SalesOrderHeaderView(viewsets.ModelViewSet):
-#     serializer_class = SalesOrderHeaderSerializer
-#     queryset = SalesOrderHeader.objects.all()
-
-class SalesOrderHeaderCreateView(generics.CreateAPIView):
+class InvoiceView(viewsets.GenericViewSet):
     serializer_class = SalesOrderSerializer
     
     def calculate_subtotal(self, sales_data) -> float:
         return sum(sale['quantity']*sale['product_price'] for sale in sales_data)
     
-    def post(self, request, *args, **kwargs):
+    # POST Method
+    def create(self, request):
         try:
             # Extracting the data from 'request'
             data = request.data
-            validation = SalesOrderSerializer(data=data)
+            validation = self.get_serializer(data=data)
             if not validation.is_valid():
                 raise ValidationError()
             
@@ -35,6 +33,7 @@ class SalesOrderHeaderCreateView(generics.CreateAPIView):
             total = subtotal - discount
             
             sales_order_header_body = {
+                'date': None,
                 'subtotal': subtotal, 
                 'discount': discount,
                 'total': subtotal - discount,
@@ -66,9 +65,18 @@ class SalesOrderHeaderCreateView(generics.CreateAPIView):
             
             #Restar la cantidad de productos que se compraron
         except ValidationError as e:
-            return Response({'error': validation.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-class SalesOrderDetailView(viewsets.ModelViewSet):
-    serializer_class = SalesOrderDetailSerializer
-    queryset = SalesOrderDetail.objects.all()
+            return Response({'errors': validation.errors}, status=status.HTTP_400_BAD_REQUEST)
+        
+    # GET Method
+    @swagger_auto_schema(  
+        # request_body=MiModeloSerializer, # Especifica el serializador del cuerpo de la solicitud (input)
+        responses={
+            status.HTTP_200_OK: SalesOrderHeaderSerializer  # Formato de la respuesta (output)
+            # status.HTTP_400_BAD_REQUEST: "{'error': 'Mensaje de error'}",  # Respuesta en caso de error de validación
+        }
+    )
+    def list(self, request):
+        queryset = SalesOrderHeader.objects.all()
+        serializer = SalesOrderHeaderSerializer(queryset, many=True)
+        return Response(serializer.data)
 
