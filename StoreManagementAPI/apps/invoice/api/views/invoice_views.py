@@ -9,6 +9,7 @@ from apps.invoice.api.serializers.invoice_serializers import (
     SalesOrderDetailSerializer, 
 )
 from drf_yasg.utils import swagger_auto_schema
+from apps.product.models import Product
 from apps.invoice.models import SalesOrderHeader, SalesOrderDetail    
 
 class InvoiceView(viewsets.GenericViewSet):
@@ -33,7 +34,6 @@ class InvoiceView(viewsets.GenericViewSet):
             total = subtotal - discount
             
             sales_order_header_body = {
-                'date': None,
                 'subtotal': subtotal, 
                 'discount': discount,
                 'total': subtotal - discount,
@@ -44,24 +44,25 @@ class InvoiceView(viewsets.GenericViewSet):
             if soh_serializer.is_valid():
                 soh = soh_serializer.save()
             
+            # Creating a register in SalesOrderDetail
+            sod_data = []
+            for obj in validation.data['sales_data']:
+                if not Product.objects.filter(id = obj['id_product']): 
+                    raise ValidationError()
+                obj_in = {
+                    'sales_order_header': soh.id,
+                    'product': obj['id_product'],
+                    'price': obj['product_price'],
+                    'quantity': obj['quantity'],
+                    'discount': 0
+                }
+                sod_data.append(obj_in)
             
+            sod_serializer = SalesOrderDetailSerializer(data=sod_data, many=True)
+            if sod_serializer.is_valid():
+                sod = sod_serializer.save()
             
-            return Response({'hola': soh.id})
-            
-            #Ingresar los datos en SalesOrderHeader
-            #subtotal = models.DecimalField("Subtotal", max_digits=10, decimal_places=4, null=False, blank=False)
-            #discount = 0
-            #total = subtotal - discount
-            #paid_with = 
-            #change = paid_with - total
-            
-            #Ingresar los datos en SalesOrderDetail
-            #sales_order_header = salesOrderHeader.id
-            #product = sales_data.id_product
-            #price = sales_data.product_price
-            #quantity = sales_data.quantity
-            #discount = 0
-            
+            return Response({'hola': SalesOrderDetailSerializer(sod, many=True).data})
             
             #Restar la cantidad de productos que se compraron
         except ValidationError as e:
