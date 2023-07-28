@@ -75,7 +75,28 @@ class InvoiceView(viewsets.GenericViewSet):
                 # Perform Update
                 prod_serializer.save()
             
-            return Response({'hola': SalesOrderDetailSerializer(sod, many=True).data})
+            # Creating the Response data
+            response_data = soh_serializer.data
+            prods = []
+            for index, prod in enumerate(response_data['products']):
+                product = Product.objects.filter(id = prod).first()
+                quantity = validation.data['sales_data'][index]['quantity']
+                price = product.price
+                subtotal = quantity * price
+                discount = 0
+                total = subtotal - discount
+                product_data = {
+                    'product_id': product.id,
+                    'product_name': product.product_name,
+                    'quantity': quantity,
+                    'price': price,
+                    'subtotal': subtotal,
+                    'discount': discount,
+                    'total': total
+                }
+                prods.append(product_data)
+            response_data['products'] = prods
+            return Response(response_data)
             
         except ValidationError as e:
             return Response({'errors': validation.errors}, status=status.HTTP_400_BAD_REQUEST)
