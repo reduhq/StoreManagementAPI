@@ -10,6 +10,7 @@ from apps.invoice.api.serializers.invoice_serializers import (
 )
 from drf_yasg.utils import swagger_auto_schema
 from apps.product.models import Product
+from apps.product.api.serializers.product_serializer import ProductSerializer
 from apps.invoice.models import SalesOrderHeader, SalesOrderDetail    
 
 class InvoiceView(viewsets.GenericViewSet):
@@ -61,10 +62,21 @@ class InvoiceView(viewsets.GenericViewSet):
             sod_serializer = SalesOrderDetailSerializer(data=sod_data, many=True)
             if sod_serializer.is_valid():
                 sod = sod_serializer.save()
+                
+            
+            # Subtract the number of products that were sold
+            for obj in validation.data['sales_data']:
+                product = Product.objects.filter(id = obj['id_product']).first()
+                obj_update = {
+                    'quantity': product.quantity - obj['quantity']
+                }
+                prod_serializer = ProductSerializer(product, data=obj_update, partial=True)
+                prod_serializer.is_valid(raise_exception=True)
+                # Perform Update
+                prod_serializer.save()
             
             return Response({'hola': SalesOrderDetailSerializer(sod, many=True).data})
             
-            #Restar la cantidad de productos que se compraron
         except ValidationError as e:
             return Response({'errors': validation.errors}, status=status.HTTP_400_BAD_REQUEST)
         
