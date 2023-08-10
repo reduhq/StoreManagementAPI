@@ -27,7 +27,9 @@ class SalesOrderDetail(BaseModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="Product", null=False, blank=False)
     price = models.DecimalField("Price", max_digits=10, decimal_places=4, null=False, blank=False)
     quantity = models.IntegerField("Quantity", null=False, blank=False)
+    subtotal = models.DecimalField("Subtotal", max_digits=10, decimal_places=4, null=False, blank=False)
     discount = models.DecimalField("Discount", max_digits=10, decimal_places=4, null=False, blank=False)
+    total = models.DecimalField("Total", max_digits=10, decimal_places=4, null=False, blank=False)
     
     class Meta: 
         verbose_name = "Sales Order Detail"
