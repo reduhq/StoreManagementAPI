@@ -7,6 +7,7 @@ from apps.invoice.api.serializers.invoice_serializers import (
     SalesOrderSerializer,
     SalesOrderHeaderSerializer,
     SalesOrderDetailSerializer, 
+    InvoiceSerializer
 )
 from drf_yasg.utils import swagger_auto_schema
 from apps.product.models import Product
@@ -20,6 +21,13 @@ class InvoiceView(viewsets.GenericViewSet):
         return sum(sale['quantity']*sale['product_price'] for sale in sales_data)
     
     # POST Method
+    @swagger_auto_schema(  
+        # request_body=MiModeloSerializer, # Especifica el serializador del cuerpo de la solicitud (input)
+        responses={
+            status.HTTP_200_OK: InvoiceSerializer  # Formato de la respuesta (output)
+            # status.HTTP_400_BAD_REQUEST: "{'error': 'Mensaje de error'}",  # Respuesta en caso de error de validación
+        }
+    )
     def create(self, request):
         try:
             # Extracting the data from 'request'
@@ -105,7 +113,7 @@ class InvoiceView(viewsets.GenericViewSet):
     @swagger_auto_schema(  
         # request_body=MiModeloSerializer, # Especifica el serializador del cuerpo de la solicitud (input)
         responses={
-            status.HTTP_200_OK: SalesOrderHeaderSerializer  # Formato de la respuesta (output)
+            status.HTTP_200_OK: InvoiceSerializer  # Formato de la respuesta (output)
             # status.HTTP_400_BAD_REQUEST: "{'error': 'Mensaje de error'}",  # Respuesta en caso de error de validación
         }
     )

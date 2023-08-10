@@ -27,3 +27,21 @@ class SalesOrderDetailSerializer(serializers.ModelSerializer):
         model = SalesOrderDetail
         fields = '__all__'
 
+class ProductOnInvoiceSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField(allow_null=False)
+    product_name = serializers.CharField(required=True)
+    quantity = serializers.IntegerField(required=True, allow_null=False)
+    price = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
+    subtotal = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
+    discount = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
+    total = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
+
+class InvoiceSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=True) 
+    date = serializers.DateField(required=True)
+    subtotal = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
+    discount = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
+    total = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
+    paid_with = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
+    change = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
+    products = ProductOnInvoiceSerializer(many=True)
