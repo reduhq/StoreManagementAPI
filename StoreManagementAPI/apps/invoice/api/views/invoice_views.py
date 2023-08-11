@@ -7,8 +7,9 @@ from apps.invoice.api.serializers.invoice_serializers import (
     SalesOrderSerializer,
     SalesOrderHeaderSerializer,
     SalesOrderDetailSerializer, 
-    InvoiceSerializer
+    SalesOrderHeaderOutSerializer
 )
+from django.db.models import Prefetch
 from drf_yasg.utils import swagger_auto_schema
 from apps.product.models import Product
 from apps.product.api.serializers.product_serializer import ProductSerializer
@@ -24,7 +25,7 @@ class InvoiceView(viewsets.GenericViewSet):
     @swagger_auto_schema(  
         # request_body=MiModeloSerializer, # Especifica el serializador del cuerpo de la solicitud (input)
         responses={
-            status.HTTP_200_OK: InvoiceSerializer  # Formato de la respuesta (output)
+            status.HTTP_200_OK: SalesOrderHeaderOutSerializer  # Formato de la respuesta (output)
             # status.HTTP_400_BAD_REQUEST: "{'error': 'Mensaje de error'}",  # Respuesta en caso de error de validación
         }
     )
@@ -87,7 +88,6 @@ class InvoiceView(viewsets.GenericViewSet):
             
             # Creating the Response data
             response_data = soh_serializer.data
-            print(response_data)
             prods = []
             for index, prod in enumerate(response_data['products']):
                 product = Product.objects.filter(id = prod).first()
@@ -107,9 +107,10 @@ class InvoiceView(viewsets.GenericViewSet):
                 }
                 prods.append(product_data)
             response_data['products'] = prods
-            invoice_serializer = InvoiceSerializer(data=response_data)
+            invoice_serializer = SalesOrderHeaderOutSerializer(data=response_data)
             invoice_serializer.is_valid(raise_exception=True)
-            return Response(invoice_serializer.data)
+            
+            return Response(response_data)
             
         except ValidationError as e:
             return Response({'errors': validation.errors}, status=status.HTTP_400_BAD_REQUEST)
@@ -118,7 +119,7 @@ class InvoiceView(viewsets.GenericViewSet):
     @swagger_auto_schema(  
         # request_body=MiModeloSerializer, # Especifica el serializador del cuerpo de la solicitud (input)
         responses={
-            status.HTTP_200_OK: InvoiceSerializer  # Formato de la respuesta (output)
+            status.HTTP_200_OK: SalesOrderHeaderOutSerializer  # Formato de la respuesta (output)
             # status.HTTP_400_BAD_REQUEST: "{'error': 'Mensaje de error'}",  # Respuesta en caso de error de validación
         }
     )

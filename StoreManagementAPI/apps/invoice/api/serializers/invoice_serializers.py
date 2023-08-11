@@ -26,22 +26,35 @@ class SalesOrderDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = SalesOrderDetail
         fields = '__all__'
+        
+class SalesOrderDetailOutSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.product_name')
 
-class ProductOnInvoiceSerializer(serializers.Serializer):
-    product_id = serializers.IntegerField(allow_null=False)
-    product_name = serializers.CharField(required=True)
-    quantity = serializers.IntegerField(required=True, allow_null=False)
-    price = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
-    subtotal = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
-    discount = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
-    total = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
+    class Meta:
+        model = SalesOrderDetail
+        fields = (
+            'id',
+            'product_name',
+            'price',
+            'quantity',
+            'subtotal',
+            'discount',
+            'total',
+        )
 
-class InvoiceSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=True) 
-    date = serializers.DateField(required=True)
-    subtotal = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
-    discount = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
-    total = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
-    paid_with = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
-    change = serializers.DecimalField(max_digits=10, decimal_places=4, coerce_to_string=False)
-    products = ProductOnInvoiceSerializer(many=True)
+class SalesOrderHeaderOutSerializer(serializers.ModelSerializer):
+    products = SalesOrderDetailOutSerializer(source='salesorderdetail_set', many=True)
+
+    class Meta:
+        model = SalesOrderHeader
+        fields = (
+            'id',
+            'date',
+            'subtotal',
+            'discount',
+            'total',
+            'paid_with',
+            'change',
+            'products'
+        )
+
