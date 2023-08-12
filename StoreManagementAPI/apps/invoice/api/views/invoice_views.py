@@ -87,30 +87,35 @@ class InvoiceView(viewsets.GenericViewSet):
                 prod_serializer.save()
             
             # Creating the Response data
-            response_data = soh_serializer.data
-            prods = []
-            for index, prod in enumerate(response_data['products']):
-                product = Product.objects.filter(id = prod).first()
-                quantity = validation.data['sales_data'][index]['quantity']
-                price = product.price
-                subtotal = quantity * price
-                discount = 0
-                total = subtotal - discount
-                product_data = {
-                    'product_id': product.id,
-                    'product_name': product.product_name,
-                    'quantity': quantity,
-                    'price': price,
-                    'subtotal': subtotal,
-                    'discount': discount,
-                    'total': total
-                }
-                prods.append(product_data)
-            response_data['products'] = prods
-            invoice_serializer = SalesOrderHeaderOutSerializer(data=response_data)
-            invoice_serializer.is_valid(raise_exception=True)
+            # response_data = soh_serializer.data
+            # prods = []
+            # for index, prod in enumerate(response_data['products']):
+            #     product = Product.objects.filter(id = prod).first()
+            #     quantity = validation.data['sales_data'][index]['quantity']
+            #     price = product.price
+            #     subtotal = quantity * price
+            #     discount = 0
+            #     total = subtotal - discount
+            #     product_data = {
+            #         'product_id': product.id,
+            #         'product_name': product.product_name,
+            #         'quantity': quantity,
+            #         'price': price,
+            #         'subtotal': subtotal,
+            #         'discount': discount,
+            #         'total': total
+            #     }
+            #     prods.append(product_data)
+            # response_data['products'] = prods
+            # invoice_serializer = SalesOrderHeaderOutSerializer(data=response_data)
+            # invoice_serializer.is_valid(raise_exception=True)
+            data = SalesOrderHeader.objects.all()
+            print(data)
+            ser = SalesOrderHeaderOutSerializer(data=data, many=True)
+            if not ser.is_valid():
+                print (ser.errors)
             
-            return Response(response_data)
+            return Response(ser.data)
             
         except ValidationError as e:
             return Response({'errors': validation.errors}, status=status.HTTP_400_BAD_REQUEST)
