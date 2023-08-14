@@ -28,12 +28,13 @@ class SalesOrderDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
         
 class SalesOrderDetailOutSerializer(serializers.ModelSerializer):
+    product_id = serializers.IntegerField(source='product.id')
     product_name = serializers.CharField(source='product.product_name')
 
     class Meta:
         model = SalesOrderDetail
         fields = (
-            'id',
+            'product_id',
             'product_name',
             'price',
             'quantity',

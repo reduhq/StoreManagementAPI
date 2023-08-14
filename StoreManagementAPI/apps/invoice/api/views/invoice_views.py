@@ -16,14 +16,12 @@ from apps.product.api.serializers.product_serializer import ProductSerializer
 from apps.invoice.models import SalesOrderHeader, SalesOrderDetail    
 
 class InvoiceView(viewsets.GenericViewSet):
-    serializer_class = SalesOrderSerializer
-    
     def calculate_subtotal(self, sales_data) -> float:
         return sum(sale['quantity']*sale['product_price'] for sale in sales_data)
     
     # POST Method
     @swagger_auto_schema(  
-        # request_body=MiModeloSerializer, # Especifica el serializador del cuerpo de la solicitud (input)
+        request_body=SalesOrderSerializer, # Especifica el serializador del cuerpo de la solicitud (input)
         responses={
             status.HTTP_200_OK: SalesOrderHeaderOutSerializer  # Formato de la respuesta (output)
             # status.HTTP_400_BAD_REQUEST: "{'error': 'Mensaje de error'}",  # Respuesta en caso de error de validación
@@ -33,92 +31,61 @@ class InvoiceView(viewsets.GenericViewSet):
         try:
             # Extracting the data from 'request'
             data = request.data
-            validation = self.get_serializer(data=data)
-            if not validation.is_valid():
+            request_serializer = SalesOrderSerializer(data=data)
+            if not request_serializer.is_valid():
                 raise ValidationError()
             
             # If the information is valid
             # create a register in SalesOrderHeader
-            subtotal = self.calculate_subtotal(data['sales_data'])
+            subtotal = self.calculate_subtotal(request_serializer.data['sales_data'])
             discount = 0
             total = subtotal - discount
+            paid_with = request_serializer.data['paid_with']
             
             sales_order_header_body = {
                 'subtotal': subtotal, 
                 'discount': discount,
                 'total': subtotal - discount,
-                'paid_with': data['paid_with'],
-                'change': data['paid_with'] - total
+                'paid_with': paid_with,
+                'change': paid_with - total
             }
             soh_serializer = SalesOrderHeaderSerializer(data=sales_order_header_body)
-            if soh_serializer.is_valid():
-                soh = soh_serializer.save()
+            soh_serializer.is_valid(raise_exception=True) # If the data is not valid, raise an e exception
+            soh = soh_serializer.save()
             
             # Creating a register in SalesOrderDetail
-            sod_data = []
-            for obj in validation.data['sales_data']:
-                if not Product.objects.filter(id = obj['id_product']): 
-                    raise ValidationError()
-                obj_in = {
-                    'sales_order_header': soh.id,
-                    'product': obj['id_product'],
-                    'price': obj['product_price'],
-                    'quantity': obj['quantity'],
-                    'subtotal': obj['product_price'] * obj['quantity'],
-                    'discount': 0,
-                    'total': obj['product_price'] * obj['quantity']
-                }
-                sod_data.append(obj_in)
+            sod_data = [{
+                'sales_order_header': soh.id,
+                'product': obj['id_product'],
+                'price': obj['product_price'],
+                'quantity': obj['quantity'],
+                'subtotal': obj['product_price'] * obj['quantity'],
+                'discount': 0,
+                'total': obj['product_price'] * obj['quantity']
+            } for obj in request_serializer.data['sales_data']]
             
             sod_serializer = SalesOrderDetailSerializer(data=sod_data, many=True)
-            if sod_serializer.is_valid():
-                sod = sod_serializer.save()
-                
+            sod_serializer.is_valid(raise_exception=True) # If the data is not valid, raise an e exception
+            sod = sod_serializer.save()
             
             # Subtract the number of products that were sold
-            for obj in validation.data['sales_data']:
-                product = Product.objects.filter(id = obj['id_product']).first()
-                obj_update = {
-                    'quantity': product.quantity - obj['quantity']
-                }
+            for obj in request_serializer.data['sales_data']:
+                product = Product.objects.get(id = obj['id_product']) # Get the element to update
+                obj_update = {'quantity': product.quantity - obj['quantity']}
+                
                 prod_serializer = ProductSerializer(product, data=obj_update, partial=True)
-                prod_serializer.is_valid(raise_exception=True)
+                prod_serializer.is_valid(raise_exception=True) # If the data is not valid, raise an e exception
                 # Perform Update
                 prod_serializer.save()
             
             # Creating the Response data
-            # response_data = soh_serializer.data
-            # prods = []
-            # for index, prod in enumerate(response_data['products']):
-            #     product = Product.objects.filter(id = prod).first()
-            #     quantity = validation.data['sales_data'][index]['quantity']
-            #     price = product.price
-            #     subtotal = quantity * price
-            #     discount = 0
-            #     total = subtotal - discount
-            #     product_data = {
-            #         'product_id': product.id,
-            #         'product_name': product.product_name,
-            #         'quantity': quantity,
-            #         'price': price,
-            #         'subtotal': subtotal,
-            #         'discount': discount,
-            #         'total': total
-            #     }
-            #     prods.append(product_data)
-            # response_data['products'] = prods
-            # invoice_serializer = SalesOrderHeaderOutSerializer(data=response_data)
-            # invoice_serializer.is_valid(raise_exception=True)
-            data = SalesOrderHeader.objects.all()
-            print(data)
-            ser = SalesOrderHeaderOutSerializer(data=data, many=True)
-            if not ser.is_valid():
-                print (ser.errors)
+            response_data = SalesOrderHeader.objects.get(id = soh_serializer.data['id'])
+            response_serializer = SalesOrderHeaderOutSerializer(response_data)
             
-            return Response(ser.data)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
             
         except ValidationError as e:
-            return Response({'errors': validation.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'errors': prod_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         
     # GET Method
     @swagger_auto_schema(  
